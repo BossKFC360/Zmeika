@@ -66,13 +66,10 @@ data class ScoreEntity(
 interface ScoreDao {
     @Insert
     suspend fun insert(score: ScoreEntity)
-
     @Query("SELECT * FROM scores ORDER BY score DESC")
     suspend fun getAll(): List<ScoreEntity>
-
     @Query("DELETE FROM scores")
     suspend fun deleteAll()
-
     @Query("DELETE FROM scores WHERE id = :id")
     suspend fun deleteById(id: Int)
 }
@@ -80,11 +77,9 @@ interface ScoreDao {
 @Database(entities = [ScoreEntity::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun scoreDao(): ScoreDao
-
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
-
         fun getInstance(context: android.content.Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -99,21 +94,16 @@ abstract class AppDatabase : RoomDatabase() {
     }
 }
 
-class LeaderboardRepository(
-    private val dao: ScoreDao
-) {
+class LeaderboardRepository(private val dao: ScoreDao) {
     suspend fun saveScore(playerName: String, score: Int) {
         dao.insert(ScoreEntity(playerName = playerName, score = score))
     }
-
     suspend fun getLeaderboard(): List<ScoreEntity> {
         return dao.getAll()
     }
-
     suspend fun deleteAll() {
         dao.deleteAll()
     }
-
     suspend fun deleteById(id: Int) {
         dao.deleteById(id)
     }
@@ -130,7 +120,6 @@ class LeaderboardViewModel(
 ) : ViewModel() {
     private val _state = MutableStateFlow<LeaderboardUiState>(LeaderboardUiState.Loading)
     val state: StateFlow<LeaderboardUiState> = _state
-
     private val _submitStatus = MutableStateFlow<Boolean?>(null)
     val submitStatus: StateFlow<Boolean?> = _submitStatus
 
@@ -187,6 +176,7 @@ class LeaderboardViewModel(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SnakeMenu() {
     var currentScreen by remember { mutableStateOf("menu") }
@@ -252,11 +242,7 @@ fun MenuScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "🐍",
-                fontSize = 72.sp,
-                modifier = Modifier.shadow(20.dp, RoundedCornerShape(50))
-            )
+            Text("🐍", fontSize = 72.sp, modifier = Modifier.shadow(20.dp, RoundedCornerShape(50)))
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "ЗМЕЙКА",
@@ -266,68 +252,33 @@ fun MenuScreen(
                 letterSpacing = 4.sp,
                 modifier = Modifier.shadow(10.dp, RoundedCornerShape(10))
             )
-            Text(
-                text = "Классическая игра",
-                fontSize = 14.sp,
-                color = Color(0xFF8BC34A),
-                letterSpacing = 2.sp
-            )
+            Text("Классическая игра", fontSize = 14.sp, color = Color(0xFF8BC34A), letterSpacing = 2.sp)
             Spacer(modifier = Modifier.height(40.dp))
 
-            MenuButton(
-                text = "▶ Новая игра",
-                onClick = onNewGame,
-                color = Color(0xFF4CAF50)
-            )
+            MenuButton("▶ Новая игра", onNewGame, Color(0xFF4CAF50))
             Spacer(modifier = Modifier.height(10.dp))
-            MenuButton(
-                text = "🏆 Таблица лидеров",
-                onClick = onLeaderboard,
-                color = Color(0xFF2196F3)
-            )
+            MenuButton("🏆 Таблица лидеров", onLeaderboard, Color(0xFF2196F3))
             Spacer(modifier = Modifier.height(10.dp))
-            MenuButton(
-                text = "⚙ Настройки",
-                onClick = onSettings,
-                color = Color(0xFFFF9800)
-            )
+            MenuButton("⚙ Настройки", onSettings, Color(0xFFFF9800))
             Spacer(modifier = Modifier.height(10.dp))
-            MenuButton(
-                text = "❌ Выход",
-                onClick = onExit,
-                color = Color(0xFFF44336)
-            )
+            MenuButton("❌ Выход", onExit, Color(0xFFF44336))
         }
     }
 }
 
 @Composable
-fun MenuButton(
-    text: String,
-    onClick: () -> Unit,
-    color: Color
-) {
+fun MenuButton(text: String, onClick: () -> Unit, color: Color) {
     Button(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .height(52.dp),
+        modifier = Modifier.fillMaxWidth(0.9f).height(52.dp),
         shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = color.copy(alpha = 0.15f),
             contentColor = color
         ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 6.dp,
-            pressedElevation = 3.dp
-        )
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp, pressedElevation = 3.dp)
     ) {
-        Text(
-            text = text,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.5.sp
-        )
+        Text(text, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp)
     }
 }
 
@@ -352,35 +303,17 @@ fun SettingsScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "⚙ Настройки",
-                fontSize = 34.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                letterSpacing = 2.sp
-            )
+            Text("⚙ Настройки", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Color.White, letterSpacing = 2.sp)
             Spacer(modifier = Modifier.height(24.dp))
 
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1A1A2E)
-                ),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "👤 Игрок",
-                        fontSize = 18.sp,
-                        color = Color(0xFF8BC34A),
-                        fontWeight = FontWeight.SemiBold
-                    )
+                Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("👤 Игрок", fontSize = 18.sp, color = Color(0xFF8BC34A), fontWeight = FontWeight.SemiBold)
                     Spacer(modifier = Modifier.height(8.dp))
                     BasicTextField(
                         value = nameInput,
@@ -390,19 +323,12 @@ fun SettingsScreen(
                             .background(Color(0xFF0A0A1A), RoundedCornerShape(12.dp))
                             .padding(14.dp),
                         singleLine = true,
-                        textStyle = androidx.compose.ui.text.TextStyle(
-                            color = Color.White,
-                            fontSize = 16.sp
-                        ),
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 16.sp),
                         cursorBrush = SolidColor(Color(0xFF4CAF50)),
                         decorationBox = { innerTextField ->
                             Box {
                                 if (nameInput.isEmpty()) {
-                                    Text(
-                                        "Введите имя",
-                                        color = Color.Gray,
-                                        fontSize = 16.sp
-                                    )
+                                    Text("Введите имя", color = Color.Gray, fontSize = 16.sp)
                                 }
                                 innerTextField()
                             }
@@ -413,9 +339,7 @@ fun SettingsScreen(
                         onClick = { onPlayerNameChange(nameInput) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
-                        )
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                     ) {
                         Text("Сохранить имя", color = Color.White, fontSize = 14.sp)
                     }
@@ -425,42 +349,21 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1A1A2E)
-                ),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "🎯 Сложность: $currentDifficulty",
-                        fontSize = 16.sp,
-                        color = Color(0xFFFF9800),
-                        fontWeight = FontWeight.SemiBold
-                    )
+                Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("🎯 Сложность: $currentDifficulty", fontSize = 16.sp, color = Color(0xFFFF9800), fontWeight = FontWeight.SemiBold)
                     Spacer(modifier = Modifier.height(12.dp))
-
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
+                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        DifficultyButton("Лёгкая", currentDifficulty) {
-                            onDifficultyChange("Лёгкая")
-                        }
-                        DifficultyButton("Средняя", currentDifficulty) {
-                            onDifficultyChange("Средняя")
-                        }
-                        DifficultyButton("Сложная", currentDifficulty) {
-                            onDifficultyChange("Сложная")
-                        }
+                        DifficultyButton("Лёгкая", currentDifficulty) { onDifficultyChange("Лёгкая") }
+                        DifficultyButton("Средняя", currentDifficulty) { onDifficultyChange("Средняя") }
+                        DifficultyButton("Сложная", currentDifficulty) { onDifficultyChange("Сложная") }
                     }
                 }
             }
@@ -468,13 +371,9 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = onBack,
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .height(48.dp),
+                modifier = Modifier.fillMaxWidth(0.5f).height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF333333)
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF333333))
             ) {
                 Text("← Назад", color = Color.White, fontSize = 16.sp)
             }
@@ -483,28 +382,18 @@ fun SettingsScreen(
 }
 
 @Composable
-fun DifficultyButton(
-    text: String,
-    current: String,
-    onClick: () -> Unit
-) {
+fun DifficultyButton(text: String, current: String, onClick: () -> Unit) {
     val isSelected = text == current
     Button(
         onClick = onClick,
-        modifier = Modifier
-            .height(36.dp)
-            .width(115.dp),
+        modifier = Modifier.height(36.dp).width(100.dp),
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFFFF9800) else Color(0xFF333333),
             contentColor = if (isSelected) Color.White else Color.Gray
         )
     ) {
-        Text(
-            text = text,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium
-        )
+        Text(text, fontSize = 13.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -520,7 +409,6 @@ fun LeaderboardScreen(onBack: () -> Unit) {
             }
         }
     )
-
     val state by viewModel.state.collectAsState()
     val submitStatus by viewModel.submitStatus.collectAsState()
 
@@ -544,12 +432,7 @@ fun LeaderboardScreen(onBack: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "🏆 Таблица лидеров",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFFD700)
-                )
+                Text("🏆 Таблица лидеров", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFD700))
                 Button(
                     onClick = { viewModel.deleteAll() },
                     shape = RoundedCornerShape(12.dp),
@@ -565,9 +448,7 @@ fun LeaderboardScreen(onBack: () -> Unit) {
             when (val currentState = state) {
                 is LeaderboardUiState.Loading -> {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(32.dp),
+                        modifier = Modifier.fillMaxSize().padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -586,31 +467,78 @@ fun LeaderboardScreen(onBack: () -> Unit) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("🏆", fontSize = 64.sp)
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    "Пока нет рекордов",
-                                    fontSize = 20.sp,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    "Сыграйте и станьте первым!",
-                                    fontSize = 16.sp,
-                                    color = Color.DarkGray
-                                )
+                                Text("Пока нет рекордов", fontSize = 20.sp, color = Color.Gray)
+                                Text("Сыграйте и станьте первым!", fontSize = 16.sp, color = Color.DarkGray)
                             }
                         }
                     } else {
                         LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(400.dp),
+                            modifier = Modifier.fillMaxWidth().height(400.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(currentState.entries) { entry ->
-                                LeaderboardItem(
-                                    entry = entry,
-                                    index = currentState.entries.indexOf(entry),
-                                    onDelete = { viewModel.deleteById(entry.id) }
-                                )
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFF1A1A2E)
+                                    ),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = when (currentState.entries.indexOf(entry)) {
+                                                    0 -> "🥇"
+                                                    1 -> "🥈"
+                                                    2 -> "🥉"
+                                                    else -> "#${currentState.entries.indexOf(entry) + 1}"
+                                                },
+                                                fontSize = 24.sp
+                                            )
+                                            Column {
+                                                Text(
+                                                    text = entry.playerName,
+                                                    fontSize = 18.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = Color.White
+                                                )
+                                                Text(
+                                                    text = SimpleDateFormat("dd.MM.yy HH:mm", Locale.getDefault())
+                                                        .format(entry.date),
+                                                    fontSize = 12.sp,
+                                                    color = Color.White.copy(alpha = 0.6f)
+                                                )
+                                            }
+                                        }
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "${entry.score}",
+                                                fontSize = 22.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            )
+                                            IconButton(
+                                                onClick = { viewModel.deleteById(entry.id) },
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Text("✕", fontSize = 16.sp, color = Color.White.copy(alpha = 0.5f))
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -622,12 +550,7 @@ fun LeaderboardScreen(onBack: () -> Unit) {
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("⚠️", fontSize = 48.sp)
-                            Text(
-                                currentState.message,
-                                fontSize = 18.sp,
-                                color = Color.Red,
-                                textAlign = TextAlign.Center
-                            )
+                            Text(currentState.message, fontSize = 18.sp, color = Color.Red, textAlign = TextAlign.Center)
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(
                                 onClick = { viewModel.loadLeaderboard() },
@@ -656,92 +579,11 @@ fun LeaderboardScreen(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = onBack,
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .height(48.dp),
+                modifier = Modifier.fillMaxWidth(0.5f).height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF333333)
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF333333))
             ) {
                 Text("← В меню", color = Color.White, fontSize = 16.sp)
-            }
-        }
-    }
-}
-
-@Composable
-fun LeaderboardItem(
-    entry: ScoreEntity,
-    index: Int,
-    onDelete: () -> Unit
-) {
-    val colors = when (index) {
-        0 -> listOf(Color(0xFFFFD700), Color(0xFFFFA000))
-        1 -> listOf(Color(0xFFC0C0C0), Color(0xFF9E9E9E))
-        2 -> listOf(Color(0xFFCD7F32), Color(0xFF8D6E63))
-        else -> listOf(Color(0xFF1A1A2E), Color(0xFF2A2A3E))
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors[0]
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = when (index) {
-                        0 -> "🥇"
-                        1 -> "🥈"
-                        2 -> "🥉"
-                        else -> "#${index + 1}"
-                    },
-                    fontSize = 24.sp
-                )
-                Column {
-                    Text(
-                        text = entry.playerName,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = SimpleDateFormat("dd.MM.yy HH:mm", Locale.getDefault())
-                            .format(entry.date),
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.6f)
-                    )
-                }
-            }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "${entry.score}",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Text("✕", fontSize = 16.sp, color = Color.White.copy(alpha = 0.5f))
-                }
             }
         }
     }
@@ -835,10 +677,7 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "🐍",
-                    fontSize = 28.sp
-                )
+                Text("🐍", fontSize = 28.sp)
                 Text(
                     text = "Счет: $score",
                     fontSize = 24.sp,
@@ -882,44 +721,23 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                             ) {
                                 if (isHead) {
                                     val isHorizontal = directionX != 0
-
                                     if (isHorizontal) {
                                         Column(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .padding(6.dp),
+                                            modifier = Modifier.fillMaxSize().padding(6.dp),
                                             horizontalAlignment = Alignment.CenterHorizontally,
                                             verticalArrangement = Arrangement.SpaceBetween
                                         ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(5.dp)
-                                                    .background(Color.Black, RoundedCornerShape(50))
-                                            )
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(5.dp)
-                                                    .background(Color.Black, RoundedCornerShape(50))
-                                            )
+                                            Box(modifier = Modifier.size(5.dp).background(Color.Black, RoundedCornerShape(50)))
+                                            Box(modifier = Modifier.size(5.dp).background(Color.Black, RoundedCornerShape(50)))
                                         }
                                     } else {
                                         Row(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .padding(6.dp),
+                                            modifier = Modifier.fillMaxSize().padding(6.dp),
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(5.dp)
-                                                    .background(Color.Black, RoundedCornerShape(50))
-                                            )
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(5.dp)
-                                                    .background(Color.Black, RoundedCornerShape(50))
-                                            )
+                                            Box(modifier = Modifier.size(5.dp).background(Color.Black, RoundedCornerShape(50)))
+                                            Box(modifier = Modifier.size(5.dp).background(Color.Black, RoundedCornerShape(50)))
                                         }
                                     }
                                 }
@@ -931,34 +749,37 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                                     .size(cellSize.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    "🍎",
-                                    fontSize = (cellSize * 0.7f).sp
-                                )
+                                Text("🍎", fontSize = (cellSize * 0.7f).sp)
                             }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                GameButton(
-                    onClick = {
-                        if (directionY != 1) {
-                            directionX = 0
-                            directionY = -1
-                        }
-                    },
-                    text = "↑"
-                )
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    GameButton(
+                        onClick = {
+                            if (directionY != 1) {
+                                directionX = 0
+                                directionY = -1
+                            }
+                        },
+                        text = "↑"
+                    )
+                }
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(28.dp)
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     GameButton(
                         onClick = {
@@ -969,6 +790,17 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                         },
                         text = "←"
                     )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    GameButton(
+                        onClick = {
+                            if (directionY != -1) {
+                                directionX = 0
+                                directionY = 1
+                            }
+                        },
+                        text = "↓"
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
                     GameButton(
                         onClick = {
                             if (directionX != -1) {
@@ -979,19 +811,9 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                         text = "→"
                     )
                 }
-
-                GameButton(
-                    onClick = {
-                        if (directionY != -1) {
-                            directionX = 0
-                            directionY = 1
-                        }
-                    },
-                    text = "↓"
-                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = onBack,
                 modifier = Modifier.fillMaxWidth(0.4f),
@@ -1058,6 +880,7 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun GameButton(
     onClick: () -> Unit,
@@ -1078,11 +901,7 @@ fun GameButton(
             pressedElevation = 4.dp
         )
     ) {
-        Text(
-            text = text,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Text(text, fontSize = 26.sp, fontWeight = FontWeight.Bold)
     }
 }
 
