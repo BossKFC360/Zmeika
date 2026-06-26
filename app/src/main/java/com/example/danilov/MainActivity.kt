@@ -3,6 +3,7 @@ package com.example.danilov
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -469,6 +471,26 @@ fun LeaderboardScreen(onBack: () -> Unit) {
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text("Пока нет рекордов", fontSize = 20.sp, color = Color.Gray)
                                 Text("Сыграйте и станьте первым!", fontSize = 16.sp, color = Color.DarkGray)
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = onBack,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF4CAF50)
+                                    )
+                                ) {
+                                    Text("▶ Играть", color = Color.White, fontSize = 16.sp)
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = onBack,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF333333)
+                                    )
+                                ) {
+                                    Text("← В меню", color = Color.White, fontSize = 16.sp)
+                                }
                             }
                         }
                     } else {
@@ -558,6 +580,16 @@ fun LeaderboardScreen(onBack: () -> Unit) {
                             ) {
                                 Text("Повторить")
                             }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = onBack,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF333333)
+                                )
+                            ) {
+                                Text("← В меню", color = Color.White, fontSize = 16.sp)
+                            }
                         }
                     }
                 }
@@ -604,6 +636,9 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
     var directionY by remember { mutableStateOf(0) }
     var scoreSaved by remember { mutableStateOf(false) }
 
+    var deathParticles by remember { mutableStateOf<List<Particle>>(emptyList()) }
+    var showDeathEffect by remember { mutableStateOf(false) }
+
     val context = androidx.compose.ui.platform.LocalContext.current
     val database = remember { AppDatabase.getInstance(context) }
     val repository = remember { LeaderboardRepository(database.scoreDao()) }
@@ -632,7 +667,41 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                 val newY = head.second + directionY
 
                 if (newX < 0 || newX >= gridSize || newY < 0 || newY >= gridSize) {
+                    showDeathEffect = true
+                    val positions = snakeBody.toList()
+                    deathParticles = positions.flatMap { pos ->
+                        List(12) {
+                            val angle = Math.random() * 2 * Math.PI
+                            val speed = 3.0 + Math.random() * 5.0
+                            Particle(
+                                x = pos.first.toFloat() * cellSize + cellSize / 2f,
+                                y = pos.second.toFloat() * cellSize + cellSize / 2f,
+                                vx = (Math.cos(angle) * speed).toFloat(),
+                                vy = (Math.sin(angle) * speed).toFloat(),
+                                color = Color(0xFF4CAF50),
+                                life = 1f,
+                                size = 3f + (Math.random() * 6).toFloat()
+                            )
+                        }
+                    }
+                    // Анимируем частицы 1 секунду
+                    var elapsedTime = 0L
+                    while (showDeathEffect && elapsedTime < 1000) {
+                        delay(16)
+                        elapsedTime += 16
+                        deathParticles = deathParticles.map { particle ->
+                            particle.copy(
+                                x = particle.x + particle.vx,
+                                y = particle.y + particle.vy,
+                                vx = particle.vx * 0.98f,
+                                vy = particle.vy * 0.98f,
+                                life = particle.life - 0.005f,
+                                size = particle.size * 0.997f
+                            )
+                        }.filter { it.life > 0 }
+                    }
                     gameOver = true
+                    showDeathEffect = false
                     break
                 }
 
@@ -647,7 +716,40 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                 }
 
                 if (newBody.drop(1).contains(Pair(newX, newY))) {
+                    showDeathEffect = true
+                    val positions = snakeBody.toList()
+                    deathParticles = positions.flatMap { pos ->
+                        List(12) {
+                            val angle = Math.random() * 2 * Math.PI
+                            val speed = 3.0 + Math.random() * 5.0
+                            Particle(
+                                x = pos.first.toFloat() * cellSize + cellSize / 2f,
+                                y = pos.second.toFloat() * cellSize + cellSize / 2f,
+                                vx = (Math.cos(angle) * speed).toFloat(),
+                                vy = (Math.sin(angle) * speed).toFloat(),
+                                color = Color(0xFF4CAF50),
+                                life = 1f,
+                                size = 3f + (Math.random() * 6).toFloat()
+                            )
+                        }
+                    }
+                    var elapsedTime = 0L
+                    while (showDeathEffect && elapsedTime < 1000) {
+                        delay(16)
+                        elapsedTime += 16
+                        deathParticles = deathParticles.map { particle ->
+                            particle.copy(
+                                x = particle.x + particle.vx,
+                                y = particle.y + particle.vy,
+                                vx = particle.vx * 0.98f,
+                                vy = particle.vy * 0.98f,
+                                life = particle.life - 0.005f,
+                                size = particle.size * 0.997f
+                            )
+                        }.filter { it.life > 0 }
+                    }
                     gameOver = true
+                    showDeathEffect = false
                     break
                 }
 
@@ -657,7 +759,6 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
             }
         }
     }
-
     if (gameOver && !scoreSaved && score > 0) {
         LaunchedEffect(Unit) {
             viewModel.saveScore(playerName, score)
@@ -773,6 +874,17 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                                 Text("🍎", fontSize = (cellSize * 0.7f).sp)
                             }
                         }
+                    }
+                }
+
+                if (showDeathEffect) {
+                    deathParticles.forEach { particle ->
+                        Box(
+                            modifier = Modifier
+                                .offset(x = particle.x.dp, y = particle.y.dp)
+                                .size(particle.size.dp)
+                                .background(particle.color, RoundedCornerShape(50))
+                        )
                     }
                 }
 
@@ -906,6 +1018,16 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
         }
     }
 }
+
+data class Particle(
+    val x: Float,
+    val y: Float,
+    val vx: Float,
+    val vy: Float,
+    val color: Color,
+    val life: Float,
+    val size: Float
+)
 
 @Composable
 fun GameButton(
