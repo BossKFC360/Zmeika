@@ -257,7 +257,7 @@ fun MenuScreen(
 
             MenuButton("▶ Новая игра", onNewGame, Color(0xFF4CAF50))
             Spacer(modifier = Modifier.height(10.dp))
-            MenuButton("🏆 Таблица лидеров", onLeaderboard, Color(0xFF2196F3))
+            MenuButton("🏆 Таблица рекордов", onLeaderboard, Color(0xFF2196F3))
             Spacer(modifier = Modifier.height(10.dp))
             MenuButton("⚙ Настройки", onSettings, Color(0xFFFF9800))
             Spacer(modifier = Modifier.height(10.dp))
@@ -386,14 +386,14 @@ fun DifficultyButton(text: String, current: String, onClick: () -> Unit) {
     val isSelected = text == current
     Button(
         onClick = onClick,
-        modifier = Modifier.height(36.dp).width(100.dp),
-        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.height(36.dp).width(120.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFFFF9800) else Color(0xFF333333),
             contentColor = if (isSelected) Color.White else Color.Gray
         )
     ) {
-        Text(text, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Text(text, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -432,7 +432,7 @@ fun LeaderboardScreen(onBack: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("🏆 Таблица лидеров", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFD700))
+                Text("🏆 Таблица рекордов", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFD700))
                 Button(
                     onClick = { viewModel.deleteAll() },
                     shape = RoundedCornerShape(12.dp),
@@ -595,6 +595,7 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
     val cellSize = 28
 
     var gameOver by remember { mutableStateOf(false) }
+    var isPaused by remember { mutableStateOf(false) }
     var score by remember { mutableStateOf(0) }
     var snakeBody by remember { mutableStateOf(listOf(Pair(6,6), Pair(5,6), Pair(4,6))) }
     var foodX by remember { mutableStateOf(9) }
@@ -623,33 +624,37 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
 
     LaunchedEffect(Unit) {
         while (!gameOver) {
-            delay(speedMs.toLong())
+            if (!isPaused) {
+                delay(speedMs.toLong())
 
-            val head = snakeBody.first()
-            val newX = head.first + directionX
-            val newY = head.second + directionY
+                val head = snakeBody.first()
+                val newX = head.first + directionX
+                val newY = head.second + directionY
 
-            if (newX < 0 || newX >= gridSize || newY < 0 || newY >= gridSize) {
-                gameOver = true
-                break
-            }
+                if (newX < 0 || newX >= gridSize || newY < 0 || newY >= gridSize) {
+                    gameOver = true
+                    break
+                }
 
-            val ateFood = (newX == foodX && newY == foodY)
+                val ateFood = (newX == foodX && newY == foodY)
 
-            val newBody = if (ateFood) {
-                score++
-                generateNewFood()
-                listOf(Pair(newX, newY)) + snakeBody
+                val newBody = if (ateFood) {
+                    score++
+                    generateNewFood()
+                    listOf(Pair(newX, newY)) + snakeBody
+                } else {
+                    listOf(Pair(newX, newY)) + snakeBody.dropLast(1)
+                }
+
+                if (newBody.drop(1).contains(Pair(newX, newY))) {
+                    gameOver = true
+                    break
+                }
+
+                snakeBody = newBody
             } else {
-                listOf(Pair(newX, newY)) + snakeBody.dropLast(1)
+                delay(100)
             }
-
-            if (newBody.drop(1).contains(Pair(newX, newY))) {
-                gameOver = true
-                break
-            }
-
-            snakeBody = newBody
         }
     }
 
@@ -684,14 +689,30 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF4CAF50)
                 )
-                Button(
-                    onClick = onBack,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF333333)
-                    )
-                ) {
-                    Text("✕", color = Color.White, fontSize = 18.sp)
+                Row {
+                    Button(
+                        onClick = { isPaused = !isPaused },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2196F3)
+                        )
+                    ) {
+                        Text(
+                            if (isPaused) "▶" else "⏸",
+                            fontSize = 18.sp,
+                            color = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = onBack,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF333333)
+                        )
+                    ) {
+                        Text("✕", color = Color.White, fontSize = 18.sp)
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -754,6 +775,23 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                         }
                     }
                 }
+
+                if (isPaused) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xCC000000)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "⏸ ПАУЗА",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            letterSpacing = 4.sp
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -768,7 +806,7 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                 ) {
                     GameButton(
                         onClick = {
-                            if (directionY != 1) {
+                            if (!isPaused && directionY != 1) {
                                 directionX = 0
                                 directionY = -1
                             }
@@ -783,7 +821,7 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                 ) {
                     GameButton(
                         onClick = {
-                            if (directionX != 1) {
+                            if (!isPaused && directionX != 1) {
                                 directionX = -1
                                 directionY = 0
                             }
@@ -793,7 +831,7 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                     Spacer(modifier = Modifier.width(12.dp))
                     GameButton(
                         onClick = {
-                            if (directionY != -1) {
+                            if (!isPaused && directionY != -1) {
                                 directionX = 0
                                 directionY = 1
                             }
@@ -803,7 +841,7 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                     Spacer(modifier = Modifier.width(12.dp))
                     GameButton(
                         onClick = {
-                            if (directionX != -1) {
+                            if (!isPaused && directionX != -1) {
                                 directionX = 1
                                 directionY = 0
                             }
@@ -811,18 +849,6 @@ fun GameScreen(speedMs: Int, playerName: String, onBack: () -> Unit) {
                         text = "→"
                     )
                 }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Button(
-                onClick = onBack,
-                modifier = Modifier.fillMaxWidth(0.4f),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF333333)
-                )
-            ) {
-                Text("← Меню", color = Color.White, fontSize = 14.sp)
             }
         }
 
